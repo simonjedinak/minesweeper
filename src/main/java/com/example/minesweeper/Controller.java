@@ -1,111 +1,150 @@
 package com.example.minesweeper;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
+/**
+ * Controller class to manage game state and UI updates
+ */
 public class Controller {
-
-    public VBox mainVBox;
-    public VBox customVBox;
-
-    public TextField input_y;
-    public TextField input_x;
-    public TextField input_mines;
-
-    @FXML
-    public javafx.scene.control.Label timerLabel;
+    private MinovePole minoveole;
+    private VBox topPanel;
+    private Stage stage;
+    private Timer timer;
     private int secondsElapsed;
+    private long startTime;
+    private Label timerLabel;
+    private Label movesLabel;
+    private Label statusLabel;
 
+    public Controller(MinovePole minoveole, VBox topPanel, Stage stage) {
+        this.minoveole = minoveole;
+        this.topPanel = topPanel;
+        this.stage = stage;
+        this.secondsElapsed = 0;
 
-
-    public void swtichToGameView(ActionEvent actionEvent) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/minesweeper/gameView.fxml"));
-            Parent gameView = loader.load();
-
-            // Get the controller for the game view
-            Controller gameController = loader.getController();
-
-            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-            Scene gameScene = new Scene(gameView);
-
-            stage.setScene(gameScene);
-            stage.show();
-
-            gameController.startTimer();
-        } catch (IOException e) {
-            System.out.println("Error loading game view: " + e.getMessage());
-        }
+        // Find labels in the top panel
+        findLabels();
     }
 
-
-    public void generateField(int x, int y, int mines) {
-        System.out.println("Generating field with dimensions: " + x + "x" + y + " and " + mines + " mines.");
+    private void findLabels() {
+        topPanel.lookupAll(".label").forEach(node -> {
+            if (node instanceof Label) {
+                Label label = (Label) node;
+                String id = label.getId();
+                if ("timerLabel".equals(id)) {
+                    timerLabel = label;
+                } else if ("movesLabel".equals(id)) {
+                    movesLabel = label;
+                } else if ("statusLabel".equals(id)) {
+                    statusLabel = label;
+                }
+            }
+        });
     }
 
-    public void startTimer() {
-        Timer timer = new Timer();
+    public void startGame() {
+        startTime = System.currentTimeMillis();
+        startTimer();
+        startGameLoop();
+    }
+
+    private void startTimer() {
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 secondsElapsed++;
                 Platform.runLater(() -> {
-                    timerLabel.setText(String.format("%03d", Math.min(secondsElapsed, 999)));
+                    if (timerLabel != null) {
+                        timerLabel.setText(String.format("Čas: %03d", Math.min(secondsElapsed, 999)));
+                    }
                 });
             }
         }, 1000, 1000);
     }
 
-
-
-    public void handleBeginner(ActionEvent actionEvent) {
-        swtichToGameView(actionEvent);
-        generateField(9, 9, 10);
-    }
-    public void handleIntermediate(ActionEvent actionEvent) {
-        swtichToGameView(actionEvent);
-        generateField(16, 16, 40);
-    }
-    public void handleExpert(ActionEvent actionEvent) {
-        swtichToGameView(actionEvent);
-        generateField(30, 16, 99);
-    }
-    public void handleCustom(ActionEvent actionEvent) {
-        customVBox.setVisible(!customVBox.isVisible());
-        customVBox.setManaged(customVBox.isVisible());
-        mainVBox.setVisible(!mainVBox.isVisible());
-        mainVBox.setManaged(mainVBox.isVisible());
-    }
-
-
-
-
-    public void handleCustomStart(ActionEvent actionEvent) {
-        try {
-            int x = Integer.parseInt(input_x.getText());
-            int y = Integer.parseInt(input_y.getText());
-            int mines = Integer.parseInt(input_mines.getText());
-            if (x < 1 || y < 1 || mines < 1 || mines > x * y) {
-                throw new NumberFormatException();
+    private void startGameLoop() {
+        Timer gameTimer = new Timer();
+        gameTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    updateUI();
+                    if (minoveole.getStav() != StavPola.HRANIE) {
+                        endGame();
+                        gameTimer.cancel();
+                    }
+                });
             }
-            swtichToGameView(actionEvent);
-            generateField(x, y, mines);
-        } catch (NumberFormatException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numbers for width and height.");
-            alert.showAndWait();
+        }, 100, 100);
+    }
+
+    private void updateUI() {
+        if (movesLabel != null) {
+            movesLabel.setText("Ťahy: " + minoveole.getPocetTahov());
         }
+
+        if (statusLabel != null) {
+            switch (minoveole.getStav()) {
+                case HRANIE:
+                    statusLabel.setText("Hrá sa...");
+                    statusLabel.setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;");
+                    break;
+                case VYHRANE:
+                    statusLabel.setText("VÝHRA!");
+                    statusLabel.setStyle("-fx-text-fill: #2ecc71; -fx-font-size: 12px; -fx-font-weight: bold;");
+                    break;
+                case NEUSPECH:
+                    statusLabel.setText("PREHRA!");
+                    statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 12px; -fx-font-weight: bold;");
+                    break;
+            }
+        }
+    }
+
+    private void endGame() {
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime) / 1000;
+
+        // Save to history
+        GameHistory.getInstance().pridajHru(
+                minoveole.getSirka(),
+                minoveole.getVyska(),
+                minoveole.getPocetMin(),
+                minoveole.getPocetTahov(),
+                minoveole.getStav(),
+                duration
+        );
+
+        // Show end game dialog
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Koniec hry");
+
+            if (minoveole.getStav() == StavPola.VYHRANE) {
+                alert.setHeaderText("🎉 Gratulujeme! Vyhrali ste! 🎉");
+                alert.setContentText(String.format(
+                        "Čas: %d sekúnd\nPočet ťahov: %d\nVeľkosť poľa: %dx%d\nPočet mín: %d",
+                        duration, minoveole.getPocetTahov(),
+                        minoveole.getSirka(), minoveole.getVyska(), minoveole.getPocetMin()));
+            } else {
+                alert.setHeaderText("💥 Bohužiaľ, prehrali ste. 💥");
+                alert.setContentText(String.format(
+                        "Čas: %d sekúnd\nPočet ťahov: %d\nSkúste to znovu!",
+                        duration, minoveole.getPocetTahov()));
+            }
+
+            alert.showAndWait();
+        });
     }
 }
