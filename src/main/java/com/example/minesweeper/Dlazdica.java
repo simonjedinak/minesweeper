@@ -44,6 +44,12 @@ public abstract class Dlazdica extends Button {
 
     public void otvorit() {
         if (stav == StavDlazdice.ZATVORENE && minovepole.getStav() == StavPola.HRANIE) {
+
+            // Spracovanie prvého kliku
+            if (minovepole.isPrvyKlik()) {
+                minovepole.spracujPrvyKlik(riadok, stlpec);
+            }
+
             stav = StavDlazdice.OTVORENE;
             minovepole.pridajTah();
             vykresli();
@@ -55,7 +61,6 @@ public abstract class Dlazdica extends Button {
             } else {
                 // Check for win condition
                 minovepole.skontrolujVyhru();
-
                 // Auto-reveal adjacent tiles if this is an empty tile
                 if (getPocetSusednychMin() == 0) {
                     minovepole.otvorSusedne(riadok, stlpec);
@@ -63,6 +68,7 @@ public abstract class Dlazdica extends Button {
             }
         }
     }
+
 
     public void oznacit() {
         if (minovepole.getStav() == StavPola.HRANIE) {
