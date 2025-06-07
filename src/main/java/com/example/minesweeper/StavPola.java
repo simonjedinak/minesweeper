@@ -1,10 +1,12 @@
-    package com.example.minesweeper;
+// StavPola.java
+package com.example.minesweeper;
 
-    /**
-     * Enum representing the state of the game field
-     */
-    public enum StavPola {
-        HRANIE,       // Playing
-        VYHRANE,      // Won
-        NEUSPECH      // Failed/Lost
-    }
+/**
+ * Enumerácia reprezentujúca stav herného poľa
+ * Spĺňa požiadavku na použitie enumov pre stavy hry
+ */
+public enum StavPola {
+    HRANIE,       // Hra prebieha
+    VYHRANE,      // Hra vyhrané
+    NEUSPECH      // Hra prehrané
+}

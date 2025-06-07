@@ -1,10 +1,12 @@
+// StavDlazdice.java
 package com.example.minesweeper;
 
 /**
- * Enum representing the state of a tile in the minesweeper game
+ * Enumerácia reprezentujúca stav dlazdice v hre míny
+ * Spĺňa požiadavku na použitie enumov
  */
 public enum StavDlazdice {
-    ZATVORENE,    // Closed/Hidden
-    OTVORENE,     // Opened/Revealed
-    OZNACENE      // Flagged/Marked
+    ZATVORENE,    // Zatvorená/Skrytá dlazdica
+    OTVORENE,     // Otvorená/Odhalená dlazdica
+    OZNACENE      // Označená vlajočkou
 }

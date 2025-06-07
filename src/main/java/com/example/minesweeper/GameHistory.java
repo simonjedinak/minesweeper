@@ -6,16 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class to store game history using collections
+ * Trieda pre uchovanie histórie hier pomocou kolekcií
+ * Implementuje Singleton pattern pre globálny prístup
+ * Spĺňa požiadavku na dátovú vrstvu s kolekciami
  */
 public class GameHistory {
-    private static GameHistory instance;
-    private List<GameRecord> historia;
+    private static GameHistory instance;  // Singleton inštancia
+    private List<GameRecord> historia;    // Kolekcia záznamov hier
 
+    /**
+     * Súkromný konštruktor pre Singleton pattern
+     */
     private GameHistory() {
-        historia = new ArrayList<>();
+        historia = new ArrayList<>();  // Inicializácia kolekcie
     }
 
+    /**
+     * Získanie jedinej inštancie triedy (Singleton)
+     * @return inštancia GameHistory
+     */
     public static GameHistory getInstance() {
         if (instance == null) {
             instance = new GameHistory();
@@ -23,33 +32,54 @@ public class GameHistory {
         return instance;
     }
 
+    /**
+     * Pridanie novej hry do histórie
+     * @param sirka šírka herného poľa
+     * @param vyska výška herného poľa
+     * @param pocetMin počet mín
+     * @param pocetTahov počet ťahov
+     * @param vysledok výsledok hry (enum)
+     * @param trvanie trvanie hry v sekundách
+     */
     public void pridajHru(int sirka, int vyska, int pocetMin, int pocetTahov,
                           StavPola vysledok, long trvanie) {
         GameRecord record = new GameRecord(sirka, vyska, pocetMin, pocetTahov,
                 vysledok, trvanie, LocalDateTime.now());
-        historia.add(record);
+        historia.add(record);  // Pridanie do kolekcie
     }
 
+    /**
+     * Získanie kópie histórie hier
+     * @return kópia zoznamu hier
+     */
     public List<GameRecord> getHistoria() {
-        return new ArrayList<>(historia);
+        return new ArrayList<>(historia);  // Vracia kópiu pre zapuzdrenie
     }
 
+    /**
+     * Vymazanie celej histórie
+     */
     public void vymazHistoriu() {
         historia.clear();
     }
 
     /**
-     * Inner class representing a single game record
+     * Vnorená trieda reprezentujúca jeden záznam hry
+     * Zapuzdruje všetky údaje o hre
      */
     public static class GameRecord {
+        // Zapuzdrené atribúty - final pre nemennosť
         private final int sirka;
         private final int vyska;
         private final int pocetMin;
         private final int pocetTahov;
         private final StavPola vysledok;
-        private final long trvanie; // in seconds
+        private final long trvanie; // v sekundách
         private final LocalDateTime cas;
 
+        /**
+         * Konštruktor záznamu hry
+         */
         public GameRecord(int sirka, int vyska, int pocetMin, int pocetTahov,
                           StavPola vysledok, long trvanie, LocalDateTime cas) {
             this.sirka = sirka;
@@ -61,7 +91,7 @@ public class GameHistory {
             this.cas = cas;
         }
 
-        // Getters
+        // Gettery pre zapuzdrenie
         public int getSirka() { return sirka; }
         public int getVyska() { return vyska; }
         public int getPocetMin() { return pocetMin; }
@@ -70,6 +100,10 @@ public class GameHistory {
         public long getTrvanie() { return trvanie; }
         public LocalDateTime getCas() { return cas; }
 
+        /**
+         * Textová reprezentácia záznamu
+         * @return formátovaný string s údajmi o hre
+         */
         @Override
         public String toString() {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -79,4 +113,3 @@ public class GameHistory {
         }
     }
 }
-
